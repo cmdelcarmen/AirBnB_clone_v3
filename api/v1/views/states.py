@@ -52,14 +52,14 @@ def del_state(state_id=None):
         abort(404)
 
 
-@app_views.route('/states/', methods=['POST'], strict_slashes=False)
-def state_create():
-    if not request.json:
-        return make_response('Not a JSON', 400)
-
+@app_views.route('/states/', methods=["POST"], strict_slashes=False)
+def state_post():
+    """ Creates given json obj in db with given id """
+    if request.is_json is True:
+        if request.get_json() is None:
+            return Response("Not a JSON", status=400)
     if 'name' not in request.get_json().keys():
-        return make_response('Missing name', 400)
-
+        return Response("Missing name", status=400)
     state = State(**request.get_json())
     state.save()
     return (jsonify(state.to_dict()), 201)
