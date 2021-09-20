@@ -51,6 +51,7 @@ def del_state(state_id=None):
     else:
         abort(404)
 
+
 @app_views.route('/states/', methods=['POST'], strict_slashes=False)
 def state_create():
     if not request.json:
