@@ -3,8 +3,6 @@
 View for state objects
 '''
 
-
-
 from models import storage
 from models.state import State
 from flask import jsonify, Flask, request, abort
@@ -64,3 +62,21 @@ def state_create():
     state = State(**request.get_json())
     state.save()
     return (jsonify(state.to_dict()), 201)
+
+
+@app_views.route('/states/<state_id>', methods=['PUT'], strict_slashes=False)
+def state_update(state_id=None):
+    '''Updates an object '''
+    state = storage.get(State, state_id)
+
+    if state is None:
+        raise NotFound
+
+    if not request.json:
+        return make_response('Not a JSON', 400)
+
+    for key, value in request.get_json().items():
+        setattr(state, key, value)
+
+    state.save()
+    return (jsonify(state.to_dict()), 200)
