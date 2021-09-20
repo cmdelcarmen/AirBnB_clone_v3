@@ -70,7 +70,7 @@ def state_update(state_id=None):
     state = storage.get(State, state_id)
 
     if state is None:
-        raise NotFound
+        abort(404)
 
     if not request.json:
         return make_response('Not a JSON', 400)
