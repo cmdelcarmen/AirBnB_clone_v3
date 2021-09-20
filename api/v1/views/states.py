@@ -53,7 +53,6 @@ def del_state(state_id=None):
 
 @app_views.route('/states/', methods=['POST'], strict_slashes=False)
 def state_create():
-    '''method creates a state'''
     if not request.json:
         return make_response('Not a JSON', 400)
 
@@ -64,13 +63,14 @@ def state_create():
     state.save()
     return (jsonify(state.to_dict()), 201)
 
+
 @app_views.route('/states/<state_id>', methods=['PUT'], strict_slashes=False)
 def state_update(state_id=None):
     '''Updates an object '''
     state = storage.get(State, state_id)
 
     if state is None:
-        raise NotFound
+        abort(404)
 
     if not request.json:
         return make_response('Not a JSON', 400)
