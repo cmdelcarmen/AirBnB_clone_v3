@@ -55,15 +55,29 @@ def del_state(state_id=None):
 
 @app_views.route('/states/', methods=['POST'], strict_slashes=False)
 def state_create():
-    if not request.json:
-        return make_response('Not a JSON', 400)
 
-    if 'name' not in request.get_json().keys():
-        return make_response('Missing name', 400)
+        d = request.get_json()
 
-    state = State(**request.get_json())
-    state.save()
-    return (jsonify(state.to_dict()), 201)
+        if isinstance(d, dict):
+            pass
+        else:
+            return (jsonify({"error": "Not a JSON"}), 400)
+
+        if 'name' not in d.keys():
+            return jsonify({'error': 'Missing name'}), 400
+
+        if 'id' in d.keys():
+            d.pop("id")
+        if 'created_at' in d.keys():
+            d.pop("created_at")
+        if 'updated_at' in d.keys():
+            d.pop("updated_at")
+
+        obj = State(**d)
+
+        storage.new(obj)
+        storage.save()
+        return jsonify(obj.to_dict()), 201
 
 
 @app_views.route('/states/<state_id>', methods=['PUT'], strict_slashes=False)
