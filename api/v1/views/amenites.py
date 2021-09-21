@@ -8,7 +8,6 @@ from models.amenity import Amenties
 
 @app_views.route('/amenities', strict_slashes=False,
                  methods=['GET', 'POST'])
-
 def amenities_view():
     '''Returns the list of all Amenity objects'''
 
@@ -49,7 +48,6 @@ def amenities_view():
 @app_views.route('/amenities/<id>',
                  strict_slashes=False,
                  methods=['GET', 'DELETE', 'PUT'])
-
 def amenity_process(id):
     """
     Returns a list, delete or update amenities
