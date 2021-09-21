@@ -82,6 +82,12 @@ def state_create():
 
 @app_views.route('/states/<state_id>', methods=['PUT'], strict_slashes=False)
 def state_update(state_id=None):
+
+        state = storage.get(State, id)
+
+        if state is None:
+                return abort(404)
+
         d = request.get_json()
         if isinstance(d, dict):
             pass
