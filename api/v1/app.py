@@ -2,20 +2,22 @@
 """
 API for HBNB
 """
+
 from os import getenv
 from flask import Flask, jsonify
+from flask_cors import CORS
 from api.v1.views import app_views
 from models import storage
 
 app = Flask(__name__)
-app.register_blueprint(app_views)
+CORS(app, resources={'/*':{'origins':['0.0.0.0']}})
 
+app.register_blueprint(app_views)
 
 @app.teardown_appcontext
 def teardown(exception):
-    """
-    Closes current SQLAlchemy session.
-    """
+    ''' Close SQLAlchemy session '''
+
     storage.close()
 
 
