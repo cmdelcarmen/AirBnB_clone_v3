@@ -54,7 +54,7 @@ def view_amenity(id):
     '''Returns a list of all Amenity objects, or delete an
     object if a given id
     '''
- 
+
     amenity = storage.get(Amenity, id)
 
     if amenity is None:
