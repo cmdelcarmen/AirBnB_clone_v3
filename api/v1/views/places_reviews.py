@@ -1,88 +1,70 @@
 #!/usr/bin/python3
-"""
-    Module of blueprints of flask
-"""
-from models import storage
-from models.review import Review
-from flask import jsonify, abort, request
+"""Places-Amenities view for api v1"""
+
 from api.v1.views import app_views
+from flask import jsonify, abort
+from models.place import Place
+from models.amenity import Amenity
+import models      
 
 
-@app_views.route("/places/<place_id>/reviews",
-                 methods=['GET'], strict_slashes=False)
-def fetch_all_reviews(place_id):
-    """Fetch all reviews"""
-    review_list = []
-    check_place = storage.get("Place", place_id)
-    if check_place is None:
+@app_views.route('/places/<place_id>/amenities',
+                 strict_slashes=False, methods=['GET'])
+def get_all_amenities_from_place(place_id):
+    """Returns all amenity objects related to a place object"""
+    place = models.storage.get(Place, place_id)
+    if not place:
         abort(404)
-    reviews = storage.all("Review")
-    for review in reviews.values():
-        if place_id == getattr(review, 'place_id'):
-            review_list.append(review.to_dict())
-    return jsonify(review_list), 200
+    if models.storage_t == "db":
+        amenities = place.amenities
+    else:
+        amenity_ids = [place.amenity_ids] \
+            if type(place.amenity_ids) is str else place.amenity_ids
+        amenities = [models.storage.get(Amenity, amenity_id)
+                     for amenity_id in amenity_ids]
+    return jsonify([amenity.to_dict() for amenity in amenities]), 200
 
 
-@app_views.route("reviews/<review_id>", methods=['GET'], strict_slashes=False)
-def fetch_review(review_id):
-    """Fetch a city"""
-    review = storage.get("Review", review_id)
-    if review is None:
+@app_views.route('/places/<place_id>/amenities/<amenity_id>',
+                 strict_slashes=False, methods=['POST'])
+def create_link_place_amenity(place_id, amenity_id):
+    """Stores a link between a an amenity and a place"""
+    place = models.storage.get(Place, place_id)
+    if not place:
         abort(404)
-    return jsonify(review.to_dict())
-
-
-@app_views.route("reviews/<review_id>",
-                 methods=['DELETE'], strict_slashes=False)
-def delete_review(review_id):
-    """Delete a review"""
-    review = storage.get("Review", review_id)
-    if review is None:
+    amenity = models.storage.get(Amenity, amenity_id)
+    if not amenity:
         abort(404)
-    review.delete()
-    storage.save()
+    if models.storage_t == "db":
+        if amenity in place.amenities:
+            return jsonify(amenity.to_dict()), 200
+        place.amenities.append(amenity)
+    else:
+        if amenity_id in place.amenity_ids:
+            return jsonify(amenity.to_dict()), 200
+        place.amenity_ids.append(amenity_id)
+    models.storage.save()
+    return jsonify(amenity.to_dict()), 201
+
+
+@app_views.route('/places/<place_id>/amenities/<amenity_id>',
+                 strict_slashes=False, methods=['DELETE'])
+def delete_link_place_amenity(place_id, amenity_id):
+    """Deletes a link between a place and an amenity and
+    returns an empty JSON"""
+    place = models.storage.get(Place, place_id)
+    if not place:
+        abort(404)
+    amenity = models.storage.get(Amenity, amenity_id)
+    if not amenity:
+        abort(404)
+    if models.storage_t == "db":
+        if amenity not in place.amenities:
+            abort(404)
+        place.amenities.remove(amenity)
+    else:
+        if amenity_id not in place.amenity_ids:
+            abort(404)
+        place.amenity_ids.remove(amenity_id)
+    models.storage.save()
     return jsonify({}), 200
-
-
-@app_views.route("places/<place_id>/reviews",
-                 methods=['POST'], strict_slashes=False)
-def create_review(place_id):
-    """Creates a Review"""
-    post_data = request.get_json()
-    if post_data is None:
-        abort(400, 'Not a JSON')
-    if post_data.get('user_id') is None:
-        abort(400, 'Missing user_id')
-    if post_data.get('text') is None:
-        abort(400, 'Missing text')
-    check_state = storage.get("Place", place_id)
-    if check_state is None:
-        abort(404)
-    check_state = storage.get("User", post_data.get('user_id'))
-    if check_state is None:
-        abort(404)
-    post_data['place_id'] = place_id
-    new_review = Review(**post_data)
-    storage.new(new_review)
-    storage.save()
-    return jsonify(new_review.to_dict()), 201
-
-
-@app_views.route("/reviews/<review_id>", methods=['PUT'], strict_slashes=False)
-def update_review(review_id):
-    """Updates a review"""
-    attributes_unchanged = ['id', 'created_at',
-                            'updated_at', 'state_id', 'user_id', 'place_id']
-    review = storage.get("Review", review_id)
-    if review is None:
-        abort(404)
-    put_data = request.get_json()
-    if put_data is None:
-        abort(400, 'Not a JSON')
-    for key, value in put_data.items():
-        if key in attributes_unchanged:
-            pass
-        else:
-            setattr(review, key, value)
-    review.save()
-    return jsonify(review.to_dict()), 200
