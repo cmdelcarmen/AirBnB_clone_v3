@@ -5,11 +5,9 @@ View for state objects
 
 from models import storage
 from models.state import State
-from flask import jsonify, Flask, request, abort
-import os
-from api.v1.views import app_views
 from models.city import City
-
+from flask import jsonify, make_response, abort, request
+from api.v1.views import app_views
 
 @app_views.route('/cities/<id>', methods=['GET', 'DELETE', 'PUT'],
                  strict_slashes=False)
